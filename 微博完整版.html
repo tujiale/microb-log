@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>微博</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+        
+        .weibo {
+            width: 600px;
+            border: 1px solid #ccc;
+            margin: 100px auto;
+            padding: 10px;
+        }
+        
+        .weibo-text {
+            width: 590px;
+            height: 140px;
+            padding: 5px;
+            border: 1px solid #ccc;
+            outline: none;
+            resize: none;
+        }
+        
+        .weibo-text:focus {
+            border-color: #f60;
+        }
+        
+        .weibo-btn {
+            width: 80px;
+            height: 30px;
+            background-color: #f90;
+            color: #fff;
+            border: 0 none;
+            margin-top: 5px;
+            border-radius: 3px;
+            cursor: pointer;
+            outline: 0 none;
+        }
+        
+        .weibo-list {
+            padding-top: 10px;
+        }
+        
+        .weibo-list li {
+            font-size: 14px;
+            line-height: 30px;
+            border-bottom: 1px dotted #ccc;
+            overflow: hidden;
+        }
+        
+        .weibo-list li p {
+            float: left;
+        }
+        
+        .weibo-list li span {
+            float: right;
+            cursor: pointer;
+        }
+        
+        .weibo-list li input {
+            height: 24px;
+            line-height: 24px;
+            width: 300px;
+            font-size: 14px;
+            border: 0 none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="weibo">
+        <textarea class="weibo-text"></textarea>
+        <input class="weibo-btn" value="发布" type="button">
+        <ul class="weibo-list">
+            <li>
+                <p>快来收了这九款用上就停不下来的应用吧！！</p>
+                <span>删除</span>
+            </li>
+            <li>
+                <p>超级详细的云南大理自助游攻略</p>
+                <span>删除</span>
+            </li>
+            <li>
+                <p>外国最近很火的舞蹈，舒服简单自然，太棒了！</p>
+                <span>删除</span>
+            </li>
+        </ul>
+    </div>
+</body>
+<script>
+    //获取DOM节点  btn 文本域（text） ul  用document.querySelector（css选测器）
+    var btn = document.querySelector(".weibo-btn");
+    var text = document.querySelector(".weibo-text");
+    var ul = document.querySelector(".weibo-list");
+
+    //整个列表，就是个数组
+    var list = [];
+
+
+    // 优化：
+
+
+    // 页面一刷新，把本地数据获取，
+    // 1.获取list内容    str接收
+    var str = localStorage.getItem("list");
+
+    // 没有数据
+    if (str == null) {
+        // 什么都不同操作；
+    }
+    // 有数据的时候。
+    else {
+        // 2.转化
+        list = JSON.parse(str);
+
+
+        // ----------------循环遍历
+        for (var i = 0; i < list.length; i++) {
+
+
+            var one = list[i];
+
+
+            // 创建新的li标签      li接收
+            var li = document.createElement("li");
+            li.innerHTML = `<p>${one.val}</p>
+                <span  sf=${one.sf}>删除</span>`;
+
+            // 2.添加到ul里面：从后添加，因为数组中的第一条数据 是最新数据，永远第一位；
+            var lis = ul.children;
+            ul.insertBefore(li, lis[0]);
+
+        }
+    }
+
+
+
+
+    // -------------------------------DOM操作  
+    //给btn添加一个点击事件，当鼠标点击的时候执行  onclick点击鼠标添加事件 addEventListener多次注册，不覆盖
+
+    btn.onclick = function() {
+
+        // 生成一个唯一的id,这样才能方便后面的注销 (时间戳加随机数生成id:Math.random() + "*" + Date.now();)  sf接收
+        var sf = Math.random() + "*" + Date.now();
+
+        // 添加文本内容   js层面 有光标的用 value获取值   val接收
+        var val = text.value;
+
+        // 创建新的li标签      li接收    创建document.createElement("li")
+        var li = document.createElement("li");
+
+        // li的内容 带上$符,不然会被当做变量处理   用innerHTML是因为li标签里的内容有html标签<p><span>
+        li.innerHTML = `<p>${val}</p>
+                <span sf=${sf}>删除</span>`;
+
+        // 获取li :父元素.children    lis接收
+        var lis = ul.children;
+
+        // 添加li标签，从前添加 insertBefore(新的DOM节点，指定的DOM节点)；
+        ul.insertBefore(li, lis[0]);
+
+        // 优化  給text.value值重新赋值为0
+        text.value = "";
+
+
+        //--------------------------数据操作、
+
+        //发布的东西就是个列表，列表就是个数组，一条条数据就是个对象；对象的里边就是内容
+        // 经验： 列表：[]  一条数据：{info:456}
+        // var list = [];多次存入，只能保留一条数据，放这个位置是局部，本次的数据会被上次的数据覆盖掉
+        // 一条数据
+        // var list = [];
+        var one = {};
+
+        //把内容val放入对象里面
+        one.val = val;
+        one.sf = sf;
+
+        // 把one对象放入数组内，需要和DOM节点相对应，DOM从前添加（ // 添加li标签，从前添加：ul.insertBefore(li, lis[0]);)
+        // 所以选择 unshift       unshift:从前添加,push:从后添加
+        list.push(one);
+
+        // 存入本地 把list存入
+        //  转化成JSON字符串: stringify();  str接收
+        var str = JSON.stringify(list);
+
+        // 存入本地:localStorage.getItem();
+        localStorage.setItem("list", str);
+
+    }
+
+
+
+
+    // ---------------------注册事件  组合键
+
+    // 给text注册,因为内容在特text里面显示   onkeydown:键盘按下
+    text.onkeydown = function(e) {
+
+
+        // 判断是否同时按下ctrl和回车
+        if (e.ctrlKey && e.keyCode === 13) {
+
+            // 触发,发布 本质就是对象上的一个方法
+            btn.onclick();
+            // 如果用addEventListener添加点击事件，发布用btn.click模拟用户的触发行为
+
+        }
+    };
+
+
+    // -----------------------------------------------删除功能：事件委托
+
+    // 1.把事件注册给父级  点击事件
+    // 2.知道点击是谁？
+    ul.onclick = function(e) {
+
+        // 点击 某个人上面的删除按钮
+        if (e.target.nodeName == "SPAN") {
+
+            // -----------------------------------------DOM操作：// 在页面中删除
+            var li = e.target.parentNode;
+            ul.removeChild(li);
+
+            // -- ---------------------------------------资料库  把这个人 档案删除；
+            // 即将要删除的 ID
+            var del_sf = e.target.getAttribute("sf");
+
+            // 把本地JS资料库的数据删除：
+            for (var i = 0; i < list.length; i++) {
+                if (list[i].sf == del_sf) {
+
+
+                    // console.log(list[i].sf);
+
+                    list.splice(i, 1);
+                    break;
+                }
+
+            }
+
+            // 存入U盘
+            var str = JSON.stringify(list);
+            localStorage.setItem("list", str);
+        }
+
+    }
+</script>
+
+</html
